@@ -73,6 +73,8 @@ return [
 
     'currency' => 'USD',
 
+    'api_token' => env('API_TOKEN'),
+
     /*
     |--------------------------------------------------------------------------
     | Application Locale Configuration
@@ -212,7 +214,7 @@ return [
     |
     */
 
-    'aliases' => Facade::defaultAliases()->merge([
+    'aliases' => Facade::defaultAliases()->merge([ // للتعرف على ال Facade في ملفات الواجهات من دون ال namespace
         'Currency' => App\Helpers\Currency::class
     ])->toArray(),
 

@@ -63,7 +63,7 @@
                                     </div> --}}
                                 </li>
                                 <li>
-                                    {{-- <div class="select-position">
+                                    <div class="select-position">
                                         <form action="{{ URL::current() }}" method="get">
                                             <select name="locale" onchange="this.form.submit()">
                                                 @foreach(LaravelLocalization::getSupportedLocales() as $localeCode => $properties)
@@ -71,7 +71,7 @@
                                                 @endforeach
                                             </select>
                                         </form>
-                                    </div> --}}
+                                    </div>
                                 </li>
                             </ul>
                         </div>

@@ -5,6 +5,7 @@ namespace App\Http\Requests;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use App\Models\Category;
+use Illuminate\Support\Facades\Gate;
 
 class CategoryRequest extends FormRequest
 {
@@ -15,7 +16,10 @@ class CategoryRequest extends FormRequest
      */
     public function authorize()
     {
-        return true;
+        if ($this->route('category')) {
+            return  Gate::allows('categories.update');
+        }
+        return Gate::allows('categories.create'); // the result is truu or false
     }
 
     /**

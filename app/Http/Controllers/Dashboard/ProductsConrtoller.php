@@ -18,7 +18,7 @@ class ProductsConrtoller extends Controller
      */
     public function index()
     {
-
+        $this->authorize('viewAny', Product::class);
         $products = Product::with(['store', 'category'])->paginate();
         return view('dashboard.products.index', compact('products'));
     }
@@ -30,7 +30,7 @@ class ProductsConrtoller extends Controller
      */
     public function create()
     {
-        //
+        $this->authorize('create', Product::class);
     }
 
     /**
@@ -41,7 +41,7 @@ class ProductsConrtoller extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $this->authorize('store', Product::class);
     }
 
     /**
@@ -52,7 +52,8 @@ class ProductsConrtoller extends Controller
      */
     public function show($id)
     {
-        //
+        $product = Product::findOrFail($id);
+        $this->authorize('view', $product);
     }
 
     /**
@@ -61,8 +62,10 @@ class ProductsConrtoller extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function edit(Product $product)
+    public function edit($id)
     {
+        $product = Product::findOrFail($id);
+        $this->authorize('update', $product);
         $tags = implode(',', $product->tags()->pluck('name')->toArray());
         return view('dashboard.products.edit', compact('product', 'tags'));
     }
@@ -76,6 +79,8 @@ class ProductsConrtoller extends Controller
      */
     public function update(Request $request, Product $product)
     {
+        $this->authorize('update', $product);
+
         $product->update( $request->except('tags') );
 
         $tags = json_decode( $request->post('tags'));
@@ -109,6 +114,9 @@ class ProductsConrtoller extends Controller
      */
     public function destroy($id)
     {
-        //
+        $product = Product::findOrFail($id);
+
+        $this->authorize('delete', $product);
+
     }
 }

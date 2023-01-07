@@ -58,7 +58,7 @@ class Category extends Model
                 'min:3',
                 'max:255',
                 Rule::unique('categories', 'name')->ignore($id),
-                'filter:laravel,php,html',
+                'filter:laravel,php,html', // $params
                 /*function($attribute, $value, $fails) {
                     if ($value == 'laravel'){
                         $fails('This name is forbidden (1)');

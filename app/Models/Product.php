@@ -22,10 +22,17 @@ class Product extends Model
         'created_at', 'updated_at', 'deleted_at',
     ];
 
+    protected $appends = [ // For append attributes to json response
+        'image_url', // name of accessor attribute
+    ];
+
     // Global Scopes ////////////////////////////////////////
     protected static function booted()
     {
         static::addGlobalScope('store', new StoreScope);
+        static::creating(function(Product $product) {
+            $product->slug = Str::slug($product->name);
+        });
     }
 
     // Scopes ////////////////////////////////////////

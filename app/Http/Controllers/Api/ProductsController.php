@@ -3,11 +3,19 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\ProductResource;
 use App\Models\Product;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Response;
 
 class ProductsController extends Controller
 {
+
+    public function __construct()
+    {
+        $this->middleware('auth:sanctum')->except('index', 'show');
+    }
     /**
      * Display a listing of the resource.
      *
@@ -15,10 +23,11 @@ class ProductsController extends Controller
      */
     public function index(Request $request)
     {
-        return $products = Product::filter($request->query())
+        $products = Product::filter($request->query())
             ->with('category:id,name', 'store:id,name', 'tags:id,name')
             ->paginate();
 
+        return ProductResource::collection($products);
     }
 
     /**
@@ -29,7 +38,26 @@ class ProductsController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'description' => 'nullable|string|max:255',
+            'category_id' => 'required|exists:categories,id',
+            'status' => 'in:active,inactive',
+            'price' => 'required|numeric|min:0',
+            'compare_price' => 'nullable|numeric|gt:price',
+        ]);
+
+        $user = $request->user();
+        if (!$user->tokenCan('products.create')) {
+            abort(403, 'Not Allowed');
+        }
+
+        $product = Product::create($request->all());
+
+
+        return Response::json($product, 201, [
+            'Location' => route('products.show', $product->id),
+        ]);
     }
 
     /**
@@ -38,9 +66,12 @@ class ProductsController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function show($id)
+    public function show(Product $product)
     {
-        //
+        return new ProductResource($product);
+
+        return $product
+            ->load('category:id,name', 'store:id,name', 'tags:id,name');
     }
 
     /**
@@ -50,9 +81,26 @@ class ProductsController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(Request $request, Product $product)
     {
-        //
+        $request->validate([
+            'name' => 'sometimes|required|string|max:255',
+            'description' => 'nullable|string|max:255',
+            'category_id' => 'sometimes|required|exists:categories,id',
+            'status' => 'in:active,inactive',
+            'price' => 'sometimes|required|numeric|min:0',
+            'compare_price' => 'nullable|numeric|gt:price',
+        ]);
+
+        $user = $request->user();
+        if (!$user->tokenCan('products.update')) {
+            abort(403, 'Not Allowed');
+        }
+
+        $product->update($request->all());
+
+
+        return Response::json($product);
     }
 
     /**
@@ -63,6 +111,16 @@ class ProductsController extends Controller
      */
     public function destroy($id)
     {
-        //
+        $user = Auth::guard('sanctum')->user();
+        if (!$user->tokenCan('products.delete')) {
+            return response([
+                'message' => 'Not allowed'
+            ], 403);
+        }
+
+        Product::destroy($id);
+        return [
+            'message' => 'Product deleted successfully',
+        ];
     }
 }

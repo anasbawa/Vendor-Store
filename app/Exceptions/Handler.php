@@ -2,7 +2,10 @@
 
 namespace App\Exceptions;
 
+use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Throwable;
 
 class Handler extends ExceptionHandler
@@ -34,6 +37,7 @@ class Handler extends ExceptionHandler
         'current_password',
         'password',
         'password_confirmation',
+        'credit_card',
     ];
 
     /**
@@ -43,8 +47,37 @@ class Handler extends ExceptionHandler
      */
     public function register()
     {
-        $this->reportable(function (Throwable $e) {
-            //
+        $this->reportable(function (QueryException $e) {
+            // نستخدم هذا التابع لمنع تخزين الاكسبشن في ال لوغ فايل
+            if ($e->getCode() === '23000') {
+                // منعنا التخزين وخزنا الرسالة التي نريدها عند حدوث هذا الاكسبشن
+                Log::channel('sql')->warning($e->getMessage()); // custom channel (we can find it in config->loging.php)
+                return false; // منع التخزين
+            }
+
+            return true; // السماح بالتخزين
+        });
+
+        $this->renderable(function (QueryException $e, Request $request) {
+            if ($e->getCode() == 23000) {
+                $message = 'Foreign key constraint failed';
+            } else {
+                $message = $e->getMessage();
+            }
+
+            if ($request->expectsJson()) { // in case of API
+                return response()->json([
+                    'message' => $message,
+                ], 400);
+            }
+
+            return redirect()
+                ->back()
+                ->withInput() // تفعيل وضع الفلاش
+                ->withErrors([ // تفعيل وضع الرجوع برسالة الخطأ
+                    'message' => $e->getMessage(),
+                ])
+                ->with('info', $message);
         });
     }
 }

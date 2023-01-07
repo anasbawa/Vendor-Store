@@ -7,6 +7,7 @@ use App\Models\Category;
 use Exception;
 use Illuminate\Http\Request;
 use App\Http\Requests\CategoryRequest;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -19,6 +20,11 @@ class CategoriesController extends Controller
      */
     public function index()
     {
+
+        if (!Gate::allows('categories.view')) { // allows() != denies()
+            abort(403); // or return view()
+        }
+
         $request = request(); // Helper Function
         /**
          *  Filter Without Local Scope
@@ -63,6 +69,10 @@ class CategoriesController extends Controller
      */
     public function create()
     {
+        if (Gate::denies('categories.create')) { // allows() != denies()
+            abort(403); // or return view()
+        }
+
         $parents = Category::all();
         $category = new Category();
         return view('dashboard.categories.create', compact('parents', 'category'));
@@ -76,6 +86,8 @@ class CategoriesController extends Controller
      */
     public function store(Request $request)
     {
+        Gate::authorize('categories.create'); // throw an exception so we put it in try catch to handle it
+
         $request->validate(Category::rules());
 
          // Request Merge
@@ -103,6 +115,9 @@ class CategoriesController extends Controller
      */
     public function show(Category $category)
     {
+        if (!Gate::allows('categories.view')) { // allows() != denies()
+            abort(403); // or return view()
+        }
         return view('dashboard.categories.show', [
             'category' => $category
         ]);
@@ -116,6 +131,8 @@ class CategoriesController extends Controller
      */
     public function edit($id)
     {
+        Gate::authorize('categories.update');
+
         try {
             $category = Category::findOrFail($id);
         } catch (Exception $e) {
@@ -142,6 +159,7 @@ class CategoriesController extends Controller
      */
     public function update(CategoryRequest $request, $id)
     {
+
         $category = Category::findOrFail($id);
 
         $old_image = $category->image;
@@ -172,6 +190,7 @@ class CategoriesController extends Controller
      */
     public function destroy(Category $category)
     {
+        Gate::authorize('categories.delete');
         $category->delete();
 
         return redirect()->route('dashboard.categories.index')

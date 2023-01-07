@@ -7,6 +7,8 @@ use App\Http\Controllers\Front\CheckoutController;
 use App\Http\Controllers\Front\HomeController;
 use App\Http\Controllers\Front\ProductsController;
 use Illuminate\Support\Facades\Route;
+use Mcamara\LaravelLocalization\Facades\LaravelLocalization;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -18,23 +20,27 @@ use Illuminate\Support\Facades\Route;
 | contains the "web" middleware group. Now create something great!
 |
 */
-
-Route::get('/', [HomeController::class, 'index'])
+Route::group([
+    'prefix' => LaravelLocalization::setLocale(),
+], function() {
+    Route::get('/', [HomeController::class, 'index'])
     ->name('home');
 
-Route::get('/products', [ProductsController::class, 'index'])
-    ->name('products.index');
+    Route::get('/products', [ProductsController::class, 'index'])
+        ->name('products.index');
 
-Route::get('/products/{product:slug}', [ProductsController::class, 'show'])
-    ->name('products.show');
+    Route::get('/products/{product:slug}', [ProductsController::class, 'show'])
+        ->name('products.show');
 
-Route::resource('cart', CartController::class);
+    Route::resource('cart', CartController::class);
 
-Route::get('checkout', [CheckoutController::class, 'create'])->name('checkout');
-Route::post('checkout', [CheckoutController::class, 'store']);
+    Route::get('checkout', [CheckoutController::class, 'create'])->name('checkout');
+    Route::post('checkout', [CheckoutController::class, 'store']);
 
-Route::get('auth/user/2fa', [TwoFactorAuthenticationController::class, 'index'])
-        ->name('front.2fa');
+    Route::get('auth/user/2fa', [TwoFactorAuthenticationController::class, 'index'])
+            ->name('front.2fa');
+});
+
 
 // require __DIR__.'/auth.php';
 
